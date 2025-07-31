@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tower of Hanoi - Stylish</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      text-align: center;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 2.5rem;
+      color: #00f2fe;
+      text-shadow: 0 0 10px #00f2fe;
+    }
+
+    #game {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 40px;
+      margin-top: 40px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .tower {
+      background: rgba(255, 255, 255, 0.1);
+      width: 130px;
+      height: 300px;
+      border-radius: 12px;
+      position: relative;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      padding-top: 20px;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      transition: 0.3s ease;
+    }
+
+    .tower:hover {
+      transform: scale(1.03);
+      border-color: #00f2fe;
+    }
+
+    .peg {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 240px;
+      background: #fff;
+      border-radius: 4px;
+    }
+
+    .disc {
+      height: 22px;
+      border-radius: 12px;
+      margin-bottom: 6px;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+    }
+
+    .selected {
+      transform: translateY(-12px);
+      box-shadow: 0 0 20px #f1c40f;
+    }
+
+    .controls {
+      margin-top: 30px;
+      font-size: 1rem;
+    }
+
+    input[type="number"] {
+      width: 50px;
+      padding: 6px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      text-align: center;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: linear-gradient(to right, #00f2fe, #4facfe);
+      border: none;
+      border-radius: 30px;
+      color: #111;
+      cursor: pointer;
+      margin-left: 10px;
+      font-weight: 600;
+      box-shadow: 0 0 12px #00f2fe;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    .moves {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #eee;
+    }
+
+    @media (max-width: 768px) {
+      #game {
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>💠 Tower of Hanoi</h1>
+
+  <div id="game">
+    <div class="tower" data-id="0"><div class="peg"></div></div>
+    <div class="tower" data-id="1"><div class="peg"></div></div>
+    <div class="tower" data-id="2"><div class="peg"></div></div>
+  </div>
+
+  <div class="controls">
+    Discs:
+    <input type="number" id="discCount" min="3" max="7" value="3" />
+    <button id="restart">Restart</button>
+  </div>
+
+  <div class="moves">Moves: 0</div>
+
+  <script>
+    const towers = [[], [], []];
+    const colors = [
+      "#ff6b6b", "#feca57", "#1dd1a1",
+      "#54a0ff", "#5f27cd", "#00d2d3", "#f368e0"
+    ];
+    let selectedTower = null;
+    let moveCount = 0;
+    let discCount = 3;
+
+    const towerEls = document.querySelectorAll(".tower");
+    const moveDisplay = document.querySelector(".moves");
+    const discInput = document.getElementById("discCount");
+
+    function initGame() {
+      towers[0] = [];
+      towers[1] = [];
+      towers[2] = [];
+      selectedTower = null;
+      moveCount = 0;
+      discCount = Math.min(Math.max(parseInt(discInput.value), 3), 7);
+
+      for (let i = discCount; i >= 1; i--) {
+        towers[0].push(i);
+      }
+
+      updateDisplay();
+      moveDisplay.textContent = `Moves: 0`;
+    }
+
+    function updateDisplay() {
+      towerEls.forEach((towerEl, i) => {
+        towerEl.querySelectorAll(".disc").forEach(d => d.remove());
+
+        towers[i].forEach(disc => {
+          const discEl = document.createElement("div");
+          discEl.className = "disc";
+          discEl.style.width = `${disc * 20 + 30}px`;
+          discEl.style.background = colors[disc - 1] || "#ccc";
+          towerEl.appendChild(discEl);
+        });
+      });
+    }
+
+    function handleTowerClick(index) {
+      if (selectedTower === null) {
+        if (towers[index].length > 0) {
+          selectedTower = index;
+          towerEls[index].lastElementChild.classList.add("selected");
+        }
+      } else {
+        if (selectedTower === index) {
+          towerEls[selectedTower].lastElementChild.classList.remove("selected");
+          selectedTower = null;
+          return;
+        }
+
+        const from = towers[selectedTower];
+        const to = towers[index];
+
+        if (to.length === 0 || from[from.length - 1] < to[to.length - 1]) {
+          to.push(from.pop());
+          moveCount++;
+          moveDisplay.textContent = `Moves: ${moveCount}`;
+
+          if (towers[2].length === discCount) {
+            moveDisplay.textContent = `🏆 You won in ${moveCount} moves!`;
+          }
+        } else {
+          alert("🚫 Invalid move!");
+        }
+
+        towerEls[selectedTower].lastElementChild?.classList.remove("selected");
+        selectedTower = null;
+        updateDisplay();
+      }
+    }
+
+    towerEls.forEach((tower, i) => {
+      tower.addEventListener("click", () => handleTowerClick(i));
+    });
+
+    document.getElementById("restart").addEventListener("click", initGame);
+
+    window.onload = initGame;
+  </script>
+</body>
+</html>
